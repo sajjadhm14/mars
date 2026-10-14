@@ -1,0 +1,78 @@
+name: yadavari
+
+x-mars: &mars
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment: &mars-env
+    NODE_ENV: production
+    PORT: 3000
+    SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+    PGHOST: db
+    PGPORT: 5432
+    PGDATABASE: todo
+    PGUSER: todo
+    PGPASSWORD: ${POSTGRES_PASSWORD:-local-development-only}
+    SMTP_HOST: ${SMTP_HOST:-mailpit}
+    SMTP_PORT: ${SMTP_PORT:-1025}
+    SMTP_SECURE: ${SMTP_SECURE:-false}
+    SMTP_REQUIRE_TLS: ${SMTP_REQUIRE_TLS:-false}
+    SMTP_USER: ${SMTP_USER:-}
+    SMTP_PASS: ${SMTP_PASS:-}
+    SMTP_FROM: ${SMTP_FROM:-Yadavari <reminder@example.test>}
+    REMINDER_POLL_MS: ${REMINDER_POLL_MS:-15000}
+    REMINDER_MAX_ATTEMPTS: ${REMINDER_MAX_ATTEMPTS:-10}
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+  init: true
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: todo
+      POSTGRES_USER: todo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-development-only}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U todo -d todo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  mars:
+    <<: *mars
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    <<: *mars
+    command: [node, src/worker.js]
+    stop_grace_period: 40s
+
+  jupiter:
+    build:
+      context: ../jupiter
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:80"
+    depends_on:
+      mars:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

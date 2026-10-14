@@ -1,0 +1,6 @@
+# Optional fallback: use the locally built jupiter assets without downloading npm inside Docker.
+services:
+  jupiter:
+    build:
+      context: ../jupiter
+      dockerfile: Dockerfile.prebuilt

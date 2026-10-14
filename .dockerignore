@@ -1,8 +1,7 @@
-.git
-.agents
-.codex
-node_modules
-**/node_modules
-**/dist
 .env
-*.log
+.env.*
+!.env.example
+vendor
+node_modules
+.git
+storage/logs/*

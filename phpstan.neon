@@ -1,0 +1,68 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+
+parameters:
+
+    level: 7
+
+    paths:
+        - app/
+        - routes/
+
+    excludePaths:
+        - migrations/*
+        - tests/*
+
+    treatPhpDocTypesAsCertain: false
+
+    # Larastan Opt-In Rules
+    checkOctaneCompatibility: true
+    noEnvCallsOutsideOfConfig: true
+    noUnnecessaryEnumerableToArrayCalls: true
+
+    # Explicit Control of Rules enabled by Strict
+    polluteScopeWithLoopInitialAssignments: true
+    polluteScopeWithAlwaysIterableForeach: true
+    polluteScopeWithBlock: true
+    checkDynamicProperties: true
+    checkExplicitMixedMissingReturn: true
+    checkFunctionNameCase: true
+    checkInternalClassCaseSensitivity: true
+    reportMaybesInMethodSignatures: false
+    reportStaticMethodSignatures: true
+    reportMaybesInPropertyPhpDocTypes: false
+    reportWrongPhpDocTypeInVarTag: false
+    checkStrictPrintfPlaceholderTypes: true
+
+    strictRules:
+        disallowedLooseComparison: true
+        booleansInConditions: false
+        booleansInLoopConditions: false
+        uselessCast: false
+        requireParentConstructorCall: true
+        disallowedBacktick: false
+        disallowedEmpty: false
+        disallowedImplicitArrayCreation: true
+        disallowedShortTernary: false
+        overwriteVariablesWithLoop: true
+        closureUsesThis: true
+        matchingInheritedMethodNames: true
+        numericOperandsInArithmeticOperators: true
+        strictFunctionCalls: true
+        dynamicCallOnStaticMethod: false
+        switchConditionsMatchingType: true
+        noVariableVariables: false
+        strictArrayFilter: true
+        illegalConstructorMethodCall: true
+
+    configDirectories:
+        - config
+
+    ignoreErrors:
+        -
+          identifier: rules.modelAppends
+          paths:
+              - app/Models/*
+          reportUnmatched: false

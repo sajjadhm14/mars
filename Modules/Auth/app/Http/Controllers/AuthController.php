@@ -5,31 +5,49 @@ declare(strict_types=1);
 namespace Modules\Auth\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\UseCase\UserUseCase;
+use DTO\CreateUserData;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        return view('auth::index');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('auth::create');
+    public function __construct(
+        private readonly UserUseCase $userUseCase,
+    ){
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(RegisterRequest $request)
     {
+        try {
+            $this->userUseCase->createUser(
+                new CreateUserData(
+                    username: $request->string('username')->value(),
+                    password: $request->string('password')->value(),
+                    email: $request->string('email')->value(),
+                )
+            );
+        }catch(\Throwable $e){
+            scope_logger_error(
+                'Error during creating new user',
+                __METHOD__,
+                'message',
+                $e->getMessage(),
+                'error',
+                $e
+            );
+            return responder()->problem(
+                status: Response::HTTP_INTERNAL_SERVER_ERROR,
+                title: __('Server Error'),
+                detail: 'ویرایش بنر با خطا مواجه شد.',
+            );
+        }
+        return responder()->success('احراز هویت با موفقیت انجام شد!');
     }
 
     /**
